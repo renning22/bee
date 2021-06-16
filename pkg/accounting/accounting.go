@@ -222,7 +222,6 @@ func (a *Accounting) Reserve(ctx context.Context, peer swarm.Address, price uint
 	// we pay early to avoid needlessly blocking request later when concurrent requests occur and we are already close to the payment threshold.
 
 	if increasedExpectedDebtReduced.Cmp(threshold) >= 0 && currentBalance.Cmp(big.NewInt(0)) < 0 {
-
 		err = a.settle(peer, accountingPeer)
 		if err != nil {
 			return fmt.Errorf("failed to settle with peer %v: %v", peer, err)
@@ -232,6 +231,22 @@ func (a *Accounting) Reserve(ctx context.Context, peer swarm.Address, price uint
 	// if expectedDebt would still exceed the paymentThreshold at this point block this request
 	// this can happen if there is a large number of concurrent requests to the same peer
 	if increasedExpectedDebt.Cmp(accountingPeer.paymentThreshold) > 0 {
+		currentBalance, err := a.Balance(peer)
+		if err != nil {
+			if !errors.Is(err, ErrPeerNoBalance) {
+				return fmt.Errorf("failed to load balance: %w", err)
+			}
+		}
+		currentDebt := new(big.Int).Neg(currentBalance)
+		if currentDebt.Cmp(big.NewInt(0)) < 0 {
+			currentDebt.SetInt64(0)
+		}
+		nextReserved := new(big.Int).Add(accountingPeer.reservedBalance, bigPrice)
+
+		// debt if all reserved operations are successfully credited excluding debt created by surplus balance
+		expectedDebt := new(big.Int).Add(currentDebt, nextReserved)
+		increasedExpectedDebtNew := new(big.Int).Add(expectedDebt, additionalDebt)
+		a.logger.Errorf("reserve-block balance=%d, reserve=%d, price=%d, increasedExpectedDebt=%d, recomputed=%d", currentBalance, accountingPeer.reservedBalance, price, increasedExpectedDebt, increasedExpectedDebtNew)
 		a.metrics.AccountingBlocksCount.Inc()
 		return ErrOverdraft
 	}
