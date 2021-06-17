@@ -271,6 +271,9 @@ func (a *Accounting) Credit(peer swarm.Address, price uint64) error {
 // Settle all debt with a peer. The lock on the accountingPeer must be held when
 // called.
 func (a *Accounting) settle(peer swarm.Address, balance *accountingPeer) error {
+	// #Chainpion
+	a.logger.Infof("#Chainpion!!!!!!  settle peer=%v", peer)
+
 	now := a.timeNow().Unix()
 	timeElapsed := now - balance.refreshTimestamp
 
@@ -599,6 +602,9 @@ func (a *Accounting) NotifyPaymentSent(peer swarm.Address, amount *big.Int, rece
 	accountingPeer.lock.Lock()
 	defer accountingPeer.lock.Unlock()
 
+	// #Chainpion
+	a.logger.Infof("#Chainpion!!!!!! NotifyPaymentSent peer=%v with amount=%d (receivedError=%v)", peer, amount, receivedError)
+
 	accountingPeer.paymentOngoing = false
 	// decrease shadow reserve by payment value
 	accountingPeer.shadowReservedBalance.Sub(accountingPeer.shadowReservedBalance, amount)
@@ -635,6 +641,9 @@ func (a *Accounting) NotifyPaymentThreshold(peer swarm.Address, paymentThreshold
 	accountingPeer.lock.Lock()
 	defer accountingPeer.lock.Unlock()
 
+	// #Chainpion
+	a.logger.Infof("#Chainpion!!!!!! NotifyPaymentReceived peer=%v with paymentThreshold=%d", peer, paymentThreshold)
+
 	accountingPeer.paymentThreshold.Set(paymentThreshold)
 	return nil
 }
@@ -645,6 +654,9 @@ func (a *Accounting) NotifyPaymentReceived(peer swarm.Address, amount *big.Int) 
 
 	accountingPeer.lock.Lock()
 	defer accountingPeer.lock.Unlock()
+
+	// #Chainpion
+	a.logger.Infof("#Chainpion!!!!!! NotifyPaymentReceived peer=%v with amount=%d", peer, amount)
 
 	currentBalance, err := a.Balance(peer)
 	if err != nil {
@@ -661,7 +673,7 @@ func (a *Accounting) NotifyPaymentReceived(peer swarm.Address, amount *big.Int) 
 		}
 		increasedSurplus := new(big.Int).Add(surplus, amount)
 
-		a.logger.Tracef("surplus crediting peer %v with amount %d due to payment, new surplus balance is %d", peer, amount, increasedSurplus)
+		a.logger.Infof("surplus crediting peer %v with amount %d due to payment, new surplus balance is %d", peer, amount, increasedSurplus)
 
 		err = a.store.Put(peerSurplusBalanceKey(peer), increasedSurplus)
 		if err != nil {
@@ -682,7 +694,7 @@ func (a *Accounting) NotifyPaymentReceived(peer swarm.Address, amount *big.Int) 
 		nextBalance = big.NewInt(0)
 	}
 
-	a.logger.Tracef("crediting peer %v with amount %d due to payment, new balance is %d", peer, amount, nextBalance)
+	a.logger.Infof("crediting peer %v with amount %d due to payment, new balance is %d", peer, amount, nextBalance)
 
 	err = a.store.Put(peerBalanceKey(peer), nextBalance)
 	if err != nil {
@@ -701,7 +713,7 @@ func (a *Accounting) NotifyPaymentReceived(peer swarm.Address, amount *big.Int) 
 		}
 		increasedSurplus := new(big.Int).Add(surplus, surplusGrowth)
 
-		a.logger.Tracef("surplus crediting peer %v with amount %d due to refreshment, new surplus balance is %d", peer, surplusGrowth, increasedSurplus)
+		a.logger.Infof("surplus crediting peer %v with amount %d due to refreshment, new surplus balance is %d", peer, surplusGrowth, increasedSurplus)
 
 		err = a.store.Put(peerSurplusBalanceKey(peer), increasedSurplus)
 		if err != nil {

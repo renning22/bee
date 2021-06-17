@@ -9,6 +9,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"math/big"
+	"os"
 	"testing"
 	"time"
 
@@ -883,7 +884,7 @@ func TestAccountingConnected(t *testing.T) {
 }
 
 func TestAccountingNotifyPaymentThreshold(t *testing.T) {
-	logger := logging.New(ioutil.Discard, 0)
+	logger := logging.New(os.Stderr, 6)
 
 	store := mock.NewStateStore()
 	defer store.Close()
