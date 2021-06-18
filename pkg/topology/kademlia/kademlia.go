@@ -1207,6 +1207,9 @@ func (k *Kad) Close() error {
 	case <-k.done:
 	case <-time.After(5 * time.Second):
 		k.logger.Warning("kademlia manage loop did not shut down properly")
+
+		// #Chainpion
+		panic("#Chainpion!!!!! Forcibly exit")
 	}
 
 	k.logger.Info("kademlia persisting peer metrics")
