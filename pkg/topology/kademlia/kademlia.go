@@ -1217,7 +1217,10 @@ func (k *Kad) Close() error {
 		k.logger.Debugf("kademlia: unable to finalize open sessions: %v", err)
 	}
 
-	return nil
+	// #Chainpion
+	panic("#Chainpion!!!!! Forcibly exit")
+
+	// return nil
 }
 
 func randomSubset(addrs []swarm.Address, count int) ([]swarm.Address, error) {
